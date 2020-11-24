@@ -1,0 +1,10 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "react-hooks"],
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "@typescript-eslint/explicit-module-boundary-types": "off" // allow inferred return types
+  },
+  "extends": ["plugin:@typescript-eslint/recommended"]
+}
