@@ -1,6 +1,10 @@
 # use-cleanup-callback
 
+[![version](https://img.shields.io/npm/v/use-cleanup-callback)](https://www.npmjs.com/package/use-cleanup-callback)
+
 A react hook that utilizes the 'cleanup callback' pattern of useEffect within a 'useCallback' style hook.
+
+[codesandbox demo](https://codesandbox.io/s/use-cleanup-callback-example-ptvhj?file=/src/App.js)
 
 ## Features
 
@@ -14,8 +18,9 @@ The features can be thought of as either `"useEffect which is called manually"`,
 Within a component:
 
 ```tsx
-const myFunction = useCleanupCallback(() => {
+const sayHiSoon = useCleanupCallback(() => {
   const timeoutId = setTimeout(() => {
+    alert("Hello world!");
     console.log("Hello world!");
   }, 1000);
 
@@ -24,7 +29,7 @@ const myFunction = useCleanupCallback(() => {
   };
 }, []);
 
-return <button onClick={myFunction}>Say hi</button>;
+return <button onClick={sayHiSoon}>Say hi</button>;
 ```
 
 In the example above, clicking the button will start a timeout to log `'Hello world!'` after 1000ms. If the button is clicked again before then, the timeout will be cleared, and a new timeout will be started. On unmount, the latest timeout will also be cleared.
@@ -35,22 +40,26 @@ In the example above, clicking the button will start a timeout to log `'Hello wo
 - Similarly to `useEffect`, the `callback` and returned `cleanup callback` must be synchronous (i.e. an `async` function callback will not work). You can alleviate this the same way you would with `useEffect` by defining the asynchronous function within the callback, and calling it immediately.
 
   ```tsx
-  const myFunction = useCleanupCallback(() => {
+  const fetchTodo = useCleanupCallback(() => {
     const controller = new AbortController();
-    async function foo() {
+    async function handleCallback() {
       try {
-        const res = await fetch("http://example.com/movies.json", {
-          signal: controller.signal,
-        });
+        const res = await fetch(
+          "https://jsonplaceholder.typicode.com/todos/1",
+          {
+            signal: controller.signal,
+          }
+        );
         const data = await res.json();
         // do stuff with data
       } catch (err) {
         if (err.name === "AbortError") return;
         // handle error
+        console.error("An unknown error has occurred: ", err);
       }
     }
     // call the async function immediately within this callback
-    foo();
+    handleCallback();
 
     return () => {
       // on cleanup, abort the controller for this scope
@@ -58,3 +67,5 @@ In the example above, clicking the button will start a timeout to log `'Hello wo
     };
   }, []);
   ```
+
+  [codesandbox async example](https://codesandbox.io/s/use-cleanup-callback-async-example-e6dcj?file=/src/App.js)
