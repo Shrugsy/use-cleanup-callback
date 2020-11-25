@@ -13,11 +13,18 @@ A react hook that utilizes the 'cleanup callback' pattern of useEffect within a 
 
 The features can be thought of as either `"useEffect which is called manually"`, or `"useCallback with useEffect's cleanup pattern"`.
 
+## Installation
+
+`npm i use-cleanup-callback`
+
 ## Usage
 
-Within a component:
-
 ```tsx
+import useCleanupCallback from 'use-cleanup-callback';
+
+...
+
+// within a component
 const sayHiSoon = useCleanupCallback(() => {
   const timeoutId = setTimeout(() => {
     alert("Hello world!");
