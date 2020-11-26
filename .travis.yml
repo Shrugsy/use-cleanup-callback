@@ -2,10 +2,15 @@ language: node_js
 node_js: node
 
 script:
-  - npm run test:ci
+  - npm run test
   - npm run build
+
+after_success:
+  - codecov
 
 deploy:
   provider: npm
   email: joshfraser91@gmail.com
   api_key: $NPM_API_KEY
+  on:
+    branch: master

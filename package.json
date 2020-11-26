@@ -11,9 +11,7 @@
   "scripts": {
     "build": "rimraf dist/* && microbundle && rimraf dist/*mjs* dist/*umd* dist/*test*",
     "dev": "microbundle watch",
-    "coverage": "codecov",
-    "test": "jest",
-    "test:ci": "npm run test && npm run coverage"
+    "test": "jest"
   },
   "keywords": [
     "react",
