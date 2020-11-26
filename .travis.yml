@@ -12,5 +12,6 @@ deploy:
   provider: npm
   email: joshfraser91@gmail.com
   api_key: $NPM_API_KEY
+  skip_cleanup: true
   on:
     branch: master
