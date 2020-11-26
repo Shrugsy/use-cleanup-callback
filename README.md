@@ -43,7 +43,7 @@ return <button onClick={sayHiSoon}>Say hi</button>;
 
 In the example above, clicking the button will start a timeout to log `'Hello world!'` after 1000ms. If the button is clicked again before then, the timeout will be cleared, and a new timeout will be started. On unmount, the latest timeout will also be cleared.
 
-_Note_: This is a custom hook that makes use of a `dependencies` array. It is recommended that if you add this hook to your eslint config for the `react-hooks/exhaustive-deps` rule to warn about incorrect dependencies.
+_Note_: This is a custom hook that makes use of a `dependencies` array. It is recommended that you add this hook to your eslint config for the `react-hooks/exhaustive-deps` rule to warn about incorrect dependencies.
 
 https://www.npmjs.com/package/eslint-plugin-react-hooks#advanced-configuration
 
