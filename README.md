@@ -1,6 +1,8 @@
 # use-cleanup-callback
 
 [![version](https://img.shields.io/npm/v/use-cleanup-callback)](https://www.npmjs.com/package/use-cleanup-callback)
+[![Build Status](https://img.shields.io/travis/shrugsy/use-cleanup-callback)](https://travis-ci.org/shrugsy/use-cleanup-callback)
+[![codecov](https://img.shields.io/codecov/c/github/shrugsy/use-cleanup-callback)](https://codecov.io/gh/shrugsy/use-cleanup-callback)
 
 A react hook that utilizes the 'cleanup callback' pattern of useEffect within a 'useCallback' style hook.
 
@@ -40,6 +42,21 @@ return <button onClick={sayHiSoon}>Say hi</button>;
 ```
 
 In the example above, clicking the button will start a timeout to log `'Hello world!'` after 1000ms. If the button is clicked again before then, the timeout will be cleared, and a new timeout will be started. On unmount, the latest timeout will also be cleared.
+
+_Note_: This is a custom hook that makes use of a `dependencies` array. It is recommended that if you add this hook to your eslint config for the `react-hooks/exhaustive-deps` rule to warn about incorrect dependencies.
+
+https://www.npmjs.com/package/eslint-plugin-react-hooks#advanced-configuration
+
+```
+{
+  "rules": {
+    // ...
+    "react-hooks/exhaustive-deps": ["warn", {
+      "additionalHooks": "useCleanupCallback"
+    }]
+  }
+}
+```
 
 ## Limitations
 
