@@ -98,7 +98,7 @@ For example:
 
 ```ts
 const greetAndAlert = useCleanupCallback((foo) => {
-  const calculatedResult = 'hello' + foo;
+  const calculatedResult = 'hello ' + foo;
   const timeoutId = setTimeout(() => {
     alert(calculatedResult);
   }, 1000)
