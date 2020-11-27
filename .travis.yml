@@ -6,7 +6,7 @@ script:
   - npm run build
 
 after_success:
-  - codecov
+  - test $TRAVIS_BRANCH = "master" && test $TRAVIS_PULL_REQUEST = "false" && codecov
 
 deploy:
   provider: npm

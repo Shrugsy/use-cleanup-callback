@@ -58,9 +58,65 @@ https://www.npmjs.com/package/eslint-plugin-react-hooks#advanced-configuration
 }
 ```
 
+## Advanced Usage
+
+The callback you provide to the hook typically will return a 'cleanup' function like so:
+
+```ts
+const greetAndAlert = useCallback((foo) => {
+  const calculatedResult = 'hello ' + foo;
+  const timeoutId = setTimeout(() => {
+    alert(calculatedResult);
+  }, 1000)
+  ...
+  return () => {
+    clearTimeout(timeoutId);
+  }
+}, []);
+```
+
+This means that when you later call the function, you don't get a meaningful return value to use for yourself.
+
+```ts
+const result = greetAndAlert("world");
+// `result` will just be the cleanup callback here!
+```
+
+While not anticipated to be a common use case, in order to both return a value _and_ use a cleanup callback, you can use object notation for the return value in the following shape:
+
+```ts
+{
+  value: unknown;
+  cleanup: () => void
+}
+```
+
+For example:
+
+```ts
+const greetAndAlert = useCallback((foo) => {
+  const calculatedResult = 'hello' + foo;
+  const timeoutId = setTimeout(() => {
+    alert(calculatedResult);
+  }, 1000)
+  ...
+  return {
+    value: calculatedResult,
+    cleanup: () => {
+      clearTimeout(timeoutId);
+    }
+  }
+})
+```
+
+```ts
+const result = greetAndAlert("world");
+// result === 'hello world'
+// `result` is returned here, *and* we still get to use the cleanup!
+```
+
 ## Limitations
 
-- As the provided callback expects a `cleanup callback` for the return value, it is not feasible to return a value when calling the memoized callback.
 - Similarly to `useEffect`, the `callback` and returned `cleanup callback` must be synchronous (i.e. an `async` function callback will not work). You can alleviate this the same way you would with `useEffect` by defining the asynchronous function within the callback, and calling it immediately.
 
   ```tsx

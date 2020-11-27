@@ -169,4 +169,24 @@ describe("Expected behaviour", () => {
     expect(mockCallback).toBeCalledTimes(4);
     expect(mockCallback).toBeCalledWith("foo", "bar");
   });
+
+  test("Can return a value and cleanup in the callback when using object notation", () => {
+    const mockCleanup = jest.fn();
+
+    const inputCallback = () => {
+      return {
+        value: "foo",
+        cleanup: mockCleanup,
+      };
+    };
+
+    const { result } = renderHook(() => useCallbackCleanup(inputCallback, []));
+
+    expect(mockCleanup).not.toHaveBeenCalled;
+
+    const returnValue = result.current();
+
+    expect(returnValue).toBe("foo");
+    expect(mockCleanup).toHaveBeenCalled;
+  });
 });

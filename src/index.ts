@@ -1,8 +1,14 @@
 import { useCallback, useEffect, DependencyList, useRef } from "react";
 
-type CleanupCallback = (() => void) | void;
+type ReturnObject = {
+  value: unknown;
+  cleanup: () => void;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Callback<T extends any[]> = (...args: T) => CleanupCallback;
+type Callback<T extends any[]> = (
+  ...args: T
+) => (() => void) | ReturnObject | void;
 
 function executeIfFunction(arg: unknown) {
   if (typeof arg === "function") arg();
@@ -20,7 +26,7 @@ const useCleanupCallback = <T extends any[]>(
   callback: Callback<T>,
   deps: DependencyList
 ) => {
-  const cleanupCallback = useRef<CleanupCallback | null>(null);
+  const cleanupCallback = useRef<(() => void) | void | null>(null);
 
   useEffect(() => {
     return () => {
@@ -34,7 +40,14 @@ const useCleanupCallback = <T extends any[]>(
     executeIfFunction(cleanupCallback.current);
 
     const returnValue = callback(...args);
-    cleanupCallback.current = returnValue;
+
+    if (typeof returnValue === "object") {
+      const { value, cleanup } = returnValue;
+      cleanupCallback.current = cleanup;
+      return value;
+    } else if (typeof returnValue === "function") {
+      cleanupCallback.current = returnValue;
+    }
 
     return returnValue;
 
