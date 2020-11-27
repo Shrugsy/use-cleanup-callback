@@ -12,6 +12,7 @@ A react hook that utilizes the 'cleanup callback' pattern of useEffect within a 
 
 - Provides a memoized callback that will update only if a `dependency` in the provided `dependency array` changes (same as `useCallback`).
 - Supports a `cleanup callback` within the provided callback which will be executed on the next successive function call, and/or on unmount.
+- Full Typescript support
 
 The features can be thought of as either `"useEffect which is called manually"`, or `"useCallback with useEffect's cleanup pattern"`.
 
@@ -60,15 +61,17 @@ https://www.npmjs.com/package/eslint-plugin-react-hooks#advanced-configuration
 
 ## Advanced Usage
 
-The callback you provide to the hook typically will return a 'cleanup' function like so:
+The callback you provide to the hook typically will return a 'cleanup' callback like so:
 
 ```ts
-const greetAndAlert = useCallback((foo) => {
+const greetAndAlert = useCleanupCallback((foo) => {
   const calculatedResult = 'hello ' + foo;
   const timeoutId = setTimeout(() => {
     alert(calculatedResult);
   }, 1000)
   ...
+
+  // cleanup callback:
   return () => {
     clearTimeout(timeoutId);
   }
@@ -94,12 +97,14 @@ While not anticipated to be a common use case, in order to both return a value _
 For example:
 
 ```ts
-const greetAndAlert = useCallback((foo) => {
+const greetAndAlert = useCleanupCallback((foo) => {
   const calculatedResult = 'hello' + foo;
   const timeoutId = setTimeout(() => {
     alert(calculatedResult);
   }, 1000)
   ...
+
+  // object notation return:
   return {
     value: calculatedResult,
     cleanup: () => {
