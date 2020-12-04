@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react-hooks";
-import useCallbackCleanup from "./";
+import useCleanupCallback from "./";
 
 describe("Expected behaviour", () => {
   test("Only provides new return reference if dependencies change", () => {
@@ -7,7 +7,8 @@ describe("Expected behaviour", () => {
 
     const firstInputCallback = jest.fn(() => undefined);
     const { result, rerender } = renderHook(
-      ({ callback, deps }) => useCallbackCleanup(callback, deps),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      ({ callback, deps }) => useCleanupCallback(callback, deps),
       {
         initialProps: {
           callback: firstInputCallback,
@@ -78,7 +79,8 @@ describe("Expected behaviour", () => {
     });
 
     const { result, rerender, unmount } = renderHook(
-      ({ callback, deps }) => useCallbackCleanup(callback, deps),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      ({ callback, deps }) => useCleanupCallback(callback, deps),
       {
         initialProps: {
           callback: inputCallback,
@@ -144,7 +146,7 @@ describe("Expected behaviour", () => {
       // just used to ensure correct type inference and correct arguments passed
     });
 
-    const { result } = renderHook(() => useCallbackCleanup(mockCallback, []));
+    const { result } = renderHook(() => useCleanupCallback(mockCallback, []));
 
     const returnedFunction = result.current;
 
@@ -180,7 +182,7 @@ describe("Expected behaviour", () => {
       };
     };
 
-    const { result } = renderHook(() => useCallbackCleanup(inputCallback, []));
+    const { result } = renderHook(() => useCleanupCallback(inputCallback, []));
 
     expect(mockCleanup).not.toHaveBeenCalled;
 
@@ -188,5 +190,14 @@ describe("Expected behaviour", () => {
 
     expect(returnValue).toBe("foo");
     expect(mockCleanup).toHaveBeenCalled;
+  });
+
+  test("Has a ts-error if the cleanup callback tries to return a value", () => {
+    renderHook(() =>
+      // @ts-expect-error : Type 'string' is not assignable to type 'void | undefined'.ts(2345)
+      useCleanupCallback(() => {
+        return () => "foo";
+      }, [])
+    );
   });
 });

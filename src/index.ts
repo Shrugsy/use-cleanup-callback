@@ -1,14 +1,14 @@
 import { useCallback, useEffect, DependencyList, useRef } from "react";
 
-type ReturnObject = {
+export type ReturnObject = {
   value: unknown;
   cleanup: () => void;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Callback<T extends any[]> = (
+export type Callback<T extends any[]> = (
   ...args: T
-) => (() => void) | ReturnObject | void;
+) => void | ReturnObject | (() => void | undefined);
 
 function executeIfFunction(arg: unknown) {
   if (typeof arg === "function") arg();
@@ -17,7 +17,7 @@ function executeIfFunction(arg: unknown) {
 /**
  * `useCleanupCallback` acts as a hybrid between `useCallback` and `useEffect`.
  * When the provided callback returns it's own cleanup callback, that cleanup will be
- * executed when the function is called again, and/or when the component unmounts.
+ * executed when the function is called again, and/or when the component un-mounts.
  * @param callback - Callback to be memoized. Supports returning a 'cleanup' callback.
  * @param deps - Dependency array for the associated callback.
  */

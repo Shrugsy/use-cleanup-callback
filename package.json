@@ -1,6 +1,6 @@
 {
   "name": "use-cleanup-callback",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "React hook that is a hybrid of useCallback and the cleanup from useEffect",
   "main": "dist/index.js",
   "source": "src/index.ts",
