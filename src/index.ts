@@ -1,17 +1,22 @@
-import { useCallback, useEffect, DependencyList, useRef } from "react";
+import { useCallback, useEffect, DependencyList, useRef } from 'react';
 
-export type ReturnObject = {
-  value: unknown;
-  cleanup: () => void;
+export type Cleanup = void | (() => void | undefined);
+
+export type ReturnObject<V> = {
+  value: V;
+  cleanup: Cleanup;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Callback<T extends any[]> = (
+export type CleanupCallback<T extends unknown[]> = (...args: T) => Cleanup;
+export type CleanupCallbackWithReturn<T extends unknown[], V> = (
   ...args: T
-) => void | ReturnObject | (() => void | undefined);
+) => ReturnObject<V>;
+export type ReturnedCleanupCallbackWithReturn<T extends unknown[], V> = (
+  ...args: T
+) => V;
 
 function executeIfFunction(arg: unknown) {
-  if (typeof arg === "function") arg();
+  if (typeof arg === 'function') arg();
 }
 
 /**
@@ -21,32 +26,43 @@ function executeIfFunction(arg: unknown) {
  * @param callback - Callback to be memoized. Supports returning a 'cleanup' callback.
  * @param deps - Dependency array for the associated callback.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const useCleanupCallback = <T extends any[]>(
-  callback: Callback<T>,
+function useCleanupCallback<T extends unknown[]>(
+  callback: CleanupCallback<T>,
   deps: DependencyList
-) => {
-  const cleanupCallback = useRef<(() => void) | void | null>(null);
+): CleanupCallback<T>;
+function useCleanupCallback<T extends unknown[], V>(
+  callback: CleanupCallbackWithReturn<T, V>,
+  deps: DependencyList
+): ReturnedCleanupCallbackWithReturn<T, V>;
+function useCleanupCallback<T extends unknown[], V>(
+  callback: CleanupCallback<T> | CleanupCallbackWithReturn<T, V>,
+  deps: DependencyList
+): CleanupCallback<T> | ReturnedCleanupCallbackWithReturn<T, V>;
+function useCleanupCallback<T extends unknown[], V>(
+  callback: CleanupCallback<T> | CleanupCallbackWithReturn<T, V>,
+  deps: DependencyList
+) {
+  const cleanupRef = useRef<Cleanup | null>(null);
 
   useEffect(() => {
     return () => {
       // clean up last call if applicable
-      executeIfFunction(cleanupCallback.current);
+      executeIfFunction(cleanupRef.current);
     };
   }, []);
 
   const outputCallback = useCallback((...args: T) => {
     // clean up previous call if applicable
-    executeIfFunction(cleanupCallback.current);
+    executeIfFunction(cleanupRef.current);
 
     const returnValue = callback(...args);
 
-    if (typeof returnValue === "object") {
+    if (typeof returnValue === 'object') {
       const { value, cleanup } = returnValue;
-      cleanupCallback.current = cleanup;
+      cleanupRef.current = cleanup;
       return value;
-    } else if (typeof returnValue === "function") {
-      cleanupCallback.current = returnValue;
+    } else if (typeof returnValue === 'function') {
+      cleanupRef.current = returnValue;
     }
 
     return returnValue;
@@ -56,6 +72,6 @@ const useCleanupCallback = <T extends any[]>(
   }, deps);
 
   return outputCallback;
-};
+}
 
 export default useCleanupCallback;

@@ -1,9 +1,10 @@
-import { renderHook } from "@testing-library/react-hooks";
-import useCleanupCallback from "./";
+import { renderHook } from '@testing-library/react-hooks';
+import { expectType } from 'tsd';
+import useCleanupCallback from './';
 
-describe("Expected behaviour", () => {
-  test("Only provides new return reference if dependencies change", () => {
-    let dep = "some_dependency";
+describe('Expected behaviour', () => {
+  test('Only provides new return reference if dependencies change', () => {
+    let dep = 'some_dependency';
 
     const firstInputCallback = jest.fn(() => undefined);
     const { result, rerender } = renderHook(
@@ -20,7 +21,7 @@ describe("Expected behaviour", () => {
     const firstCallback = result.current;
 
     // calling the callback should not change the reference
-    expect(firstInputCallback).not.toHaveBeenCalled;
+    expect(firstInputCallback).not.toHaveBeenCalled();
     firstCallback();
     expect(firstInputCallback).toBeCalledTimes(1);
     expect(result.current).toEqual(firstCallback);
@@ -40,11 +41,11 @@ describe("Expected behaviour", () => {
     // despite changing callback, we didn't change dependencies
     // so output is expected to be stale (the first input callback)
     expect(firstInputCallback).toBeCalledTimes(2);
-    expect(secondInputCallback).not.toHaveBeenCalled;
+    expect(secondInputCallback).not.toHaveBeenCalled();
 
     // change deps, should get a new reference
     const thirdInputCallback = jest.fn(() => undefined);
-    dep = "some changed dependency";
+    dep = 'some changed dependency';
     rerender({
       callback: thirdInputCallback,
       deps: [dep],
@@ -58,13 +59,13 @@ describe("Expected behaviour", () => {
 
     // other callbacks should not have been called any further
     expect(firstInputCallback).toBeCalledTimes(2);
-    expect(secondInputCallback).not.toHaveBeenCalled;
+    expect(secondInputCallback).not.toHaveBeenCalled();
     // newest callback should be correctly called since dependencies changed
     expect(thirdInputCallback).toBeCalledTimes(1);
   });
 
-  test("Calls a provided cleanup callback each time the returned function is called, and on unmount", () => {
-    let dep = "some_dependency";
+  test('Calls a provided cleanup callback each time the returned function is called, and on unmount', () => {
+    let dep = 'some_dependency';
     let numCalls = 0;
 
     const cleanupCallback0 = jest.fn(() => undefined);
@@ -90,26 +91,26 @@ describe("Expected behaviour", () => {
     );
 
     // prior to doing anything, nothing should have been called
-    expect(inputCallback).not.toHaveBeenCalled;
-    expect(cleanupCallback0).not.toHaveBeenCalled;
-    expect(cleanupCallback1).not.toHaveBeenCalled;
-    expect(cleanupCallback2).not.toHaveBeenCalled;
+    expect(inputCallback).not.toHaveBeenCalled();
+    expect(cleanupCallback0).not.toHaveBeenCalled();
+    expect(cleanupCallback1).not.toHaveBeenCalled();
+    expect(cleanupCallback2).not.toHaveBeenCalled();
 
     // call the output function for the first time,
     // input callback should be called, but not cleanups
     result.current();
     expect(inputCallback).toBeCalledTimes(1);
-    expect(cleanupCallback0).not.toHaveBeenCalled;
-    expect(cleanupCallback1).not.toHaveBeenCalled;
-    expect(cleanupCallback2).not.toHaveBeenCalled;
+    expect(cleanupCallback0).not.toHaveBeenCalled();
+    expect(cleanupCallback1).not.toHaveBeenCalled();
+    expect(cleanupCallback2).not.toHaveBeenCalled();
 
     // call the output function again, input callback should be called again,
     // and cleanup for previous function should be called
     result.current();
     expect(inputCallback).toBeCalledTimes(2);
     expect(cleanupCallback0).toBeCalledTimes(1);
-    expect(cleanupCallback1).not.toHaveBeenCalled;
-    expect(cleanupCallback2).not.toHaveBeenCalled;
+    expect(cleanupCallback1).not.toHaveBeenCalled();
+    expect(cleanupCallback2).not.toHaveBeenCalled();
 
     // call the output function again, input callback should be called again,
     // and cleanup for previous function should be called
@@ -117,10 +118,10 @@ describe("Expected behaviour", () => {
     expect(inputCallback).toBeCalledTimes(3);
     expect(cleanupCallback0).toBeCalledTimes(1);
     expect(cleanupCallback1).toBeCalledTimes(1);
-    expect(cleanupCallback2).not.toHaveBeenCalled;
+    expect(cleanupCallback2).not.toHaveBeenCalled();
 
     // change dependencies, shouldn't call any callbacks or cleanups
-    dep = "an altered dependency";
+    dep = 'an altered dependency';
     rerender({
       callback: inputCallback,
       deps: [dep],
@@ -139,7 +140,7 @@ describe("Expected behaviour", () => {
     expect(cleanupCallback2).toBeCalledTimes(1);
   });
 
-  test("Returned function can be called with arguments as per the provided callback", () => {
+  test('Returned function can be called with arguments as per the provided callback', () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const mockCallback = jest.fn((a: string, b: string) => {
       // don't need to actually do anything in here,
@@ -150,53 +151,97 @@ describe("Expected behaviour", () => {
 
     const returnedFunction = result.current;
 
-    expect(mockCallback).not.toHaveBeenCalled;
+    expect(mockCallback).not.toHaveBeenCalled();
 
     // @ts-expect-error - called with no arguments, should expect two
     returnedFunction();
     expect(mockCallback).toBeCalledTimes(1);
 
     // @ts-expect-error - called with one argument, should expect two
-    returnedFunction("foo");
+    returnedFunction('foo');
     expect(mockCallback).toBeCalledTimes(2);
-    expect(mockCallback).toBeCalledWith("foo");
+    expect(mockCallback).toBeCalledWith('foo');
 
     // @ts-expect-error - called with number, should expect string
-    returnedFunction("foo", 4);
+    returnedFunction('foo', 4);
     expect(mockCallback).toBeCalledTimes(3);
-    expect(mockCallback).toBeCalledWith("foo", 4);
+    expect(mockCallback).toBeCalledWith('foo', 4);
 
     // no expected error here, called with correct arguments
-    returnedFunction("foo", "bar");
+    returnedFunction('foo', 'bar');
     expect(mockCallback).toBeCalledTimes(4);
-    expect(mockCallback).toBeCalledWith("foo", "bar");
+    expect(mockCallback).toBeCalledWith('foo', 'bar');
   });
 
-  test("Can return a value and cleanup in the callback when using object notation", () => {
-    const mockCleanup = jest.fn();
+  test('Can return a value and cleanup in the callback when using object notation', () => {
+    // CASE 1: STRING RETURN VALUE
+    const mockCleanup0 = jest.fn();
 
-    const inputCallback = () => {
+    const inputCallback0 = () => {
       return {
-        value: "foo",
-        cleanup: mockCleanup,
+        value: 'foo',
+        cleanup: mockCleanup0,
       };
     };
 
-    const { result } = renderHook(() => useCleanupCallback(inputCallback, []));
+    const { result } = renderHook(() => useCleanupCallback(inputCallback0, []));
 
-    expect(mockCleanup).not.toHaveBeenCalled;
+    expect(mockCleanup0).not.toHaveBeenCalled();
 
-    const returnValue = result.current();
+    const returnValue0_0 = result.current();
 
-    expect(returnValue).toBe("foo");
-    expect(mockCleanup).toHaveBeenCalled;
+    expectType<string>(returnValue0_0);
+    expect(returnValue0_0).toBe('foo');
+    expect(mockCleanup0).not.toHaveBeenCalled();
+
+    // calling again should run cleanup
+    const returnValue0_1 = result.current();
+    expect(returnValue0_1).toBe('foo');
+    expect(mockCleanup0).toHaveBeenCalled();
+
+    // CASE 2: WITH A MORE DETAILED RETURN VALUE
+    type MyTuple = Readonly<['hello', 'world']>;
+    const mockCleanup1 = jest.fn();
+
+    const returnTuple = ['hello', 'world'] as const;
+    const inputCallback1 = () => {
+      return {
+        value: returnTuple,
+        cleanup: mockCleanup1,
+      };
+    };
+
+    const { result: result1 } = renderHook(() =>
+      useCleanupCallback(inputCallback1, [])
+    );
+
+    expect(mockCleanup1).not.toHaveBeenCalled;
+
+    const returnValue1_0 = result1.current();
+
+    expectType<MyTuple>(returnValue1_0);
+    // should match the expected tuple contents (shallow)
+    expect(returnValue1_0).toEqual(['hello', 'world']);
+    // should match strict equality with the return value
+    expect(returnValue1_0).toBe(returnTuple);
+    expect(mockCleanup1).not.toHaveBeenCalled();
+
+    // calling again should run cleanup
+    const returnValue1_1 = result1.current();
+
+    expectType<MyTuple>(returnValue1_1);
+    // should match the expected tuple contents (shallow)
+    expect(returnValue1_1).toEqual(['hello', 'world']);
+    // should match strict equality with the return value
+    expect(returnValue1_1).toBe(returnTuple);
+    expect(mockCleanup1).toHaveBeenCalled();
   });
 
-  test("Has a ts-error if the cleanup callback tries to return a value", () => {
+  test('Has a ts-error if the cleanup callback tries to return a value directly', () => {
     renderHook(() =>
-      // @ts-expect-error : Type 'string' is not assignable to type 'void | undefined'.ts(2345)
+      // @ts-expect-error : Type 'string' is not assignable to type CleanupCallback<[]>.ts(2345)
       useCleanupCallback(() => {
-        return () => "foo";
+        return () => 'foo';
       }, [])
     );
   });
