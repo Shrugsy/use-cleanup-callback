@@ -120,6 +120,16 @@ const result = greetAndAlert("world");
 // `result` is returned here, *and* we still get to use the cleanup!
 ```
 
+## Options
+`useCleanupCallback` takes an optional object as a third argument to pass additional options to in order to customize the behaviour of the hook.
+
+| Name                | Type    | Default | Description                                                                      |
+|---------------------|---------|---------|----------------------------------------------------------------------------------|
+| cleanUpOnCall       | boolean | true    | Whether to call the last cleanup when the output callback of the hook is called. |
+| cleanUpOnDepsChange | boolean | false   | Whether to call the last cleanup when dependencies change.                       |
+| cleanUpOnUnmount    | boolean | true    | Whether to call the last cleanup when the hook unmounts.                         |
+
+
 ## Limitations
 
 - Similarly to `useEffect`, the `callback` and returned `cleanup callback` must be synchronous (i.e. an `async` function callback will not work). You can alleviate this the same way you would with `useEffect` by defining the asynchronous function within the callback, and calling it immediately.

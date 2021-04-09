@@ -1,6 +1,6 @@
-import { renderHook } from '@testing-library/react-hooks';
+import { act, renderHook } from '@testing-library/react-hooks';
 import { expectType } from 'tsd';
-import useCleanupCallback from './';
+import useCleanupCallback from '..';
 
 describe('Expected behaviour', () => {
   test('Only provides new return reference if dependencies change', () => {
@@ -211,9 +211,7 @@ describe('Expected behaviour', () => {
       };
     };
 
-    const { result: result1 } = renderHook(() =>
-      useCleanupCallback(inputCallback1, [])
-    );
+    const { result: result1 } = renderHook(() => useCleanupCallback(inputCallback1, []));
 
     expect(mockCleanup1).not.toHaveBeenCalled;
 
@@ -244,5 +242,290 @@ describe('Expected behaviour', () => {
         return () => 'foo';
       }, [])
     );
+  });
+
+  test('Calls cleanup on deps change when the option is true', () => {
+    let dep = 'dep0';
+    const mockCleanup0 = jest.fn();
+
+    // [ACTION] - Initial render
+    const { result, rerender, unmount } = renderHook(
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      ({ callback, deps }) => useCleanupCallback(callback, deps, { cleanUpOnDepsChange: true }),
+      {
+        initialProps: {
+          callback: () => {
+            return mockCleanup0;
+          },
+          deps: [dep],
+        },
+      }
+    );
+
+    // [ACTION] - call the user's callback
+    act(() => {
+      result.current();
+    });
+
+    // [ACTION] - re-render with new deps
+    dep = 'dep1';
+    const mockCleanup1 = jest.fn();
+    rerender({
+      callback: () => {
+        return mockCleanup1;
+      },
+      deps: [dep],
+    });
+
+    // [ASSERT] - should have called first cleanup
+    expect(mockCleanup0).toBeCalledTimes(1);
+    expect(mockCleanup1).toBeCalledTimes(0);
+
+    // [ACTION] - call the user's callback
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - cleanups should be unaffected
+    expect(mockCleanup0).toBeCalledTimes(1);
+    expect(mockCleanup1).toBeCalledTimes(0);
+
+    // [ACTION] - call the user's callback again
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - last cleanup should have triggered
+    expect(mockCleanup0).toBeCalledTimes(1);
+    expect(mockCleanup1).toBeCalledTimes(1);
+
+    // [ACTION] - unmount the hook
+    unmount();
+
+    // [ASSERT] - last cleanup should be called again
+    expect(mockCleanup0).toBeCalledTimes(1);
+    expect(mockCleanup1).toBeCalledTimes(2);
+  });
+
+  test('Does not call cleanup on deps change when the option is false', () => {
+    let dep = 'dep0';
+    const mockCleanup0 = jest.fn();
+
+    // [ACTION] - Initial render
+    const { result, rerender, unmount } = renderHook(
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      ({ callback, deps }) => useCleanupCallback(callback, deps, { cleanUpOnDepsChange: false }),
+      {
+        initialProps: {
+          callback: () => {
+            return mockCleanup0;
+          },
+          deps: [dep],
+        },
+      }
+    );
+
+    // [ACTION] - call the user's callback
+    act(() => {
+      result.current();
+    });
+
+    // [ACTION] - re-render with new deps
+    dep = 'dep1';
+    const mockCleanup1 = jest.fn();
+    rerender({
+      callback: () => {
+        return mockCleanup1;
+      },
+      deps: [dep],
+    });
+
+    // [ASSERT] - should not have called first cleanup (option false)
+    expect(mockCleanup0).toBeCalledTimes(0);
+    expect(mockCleanup1).toBeCalledTimes(0);
+
+    // [ACTION] - call the user's callback
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - first cleanup should have triggered
+    expect(mockCleanup0).toBeCalledTimes(1);
+    expect(mockCleanup1).toBeCalledTimes(0);
+
+    // [ACTION] - call the user's callback again
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - last cleanup should have triggered
+    expect(mockCleanup0).toBeCalledTimes(1);
+    expect(mockCleanup1).toBeCalledTimes(1);
+
+    // [ACTION] - unmount hook
+    unmount();
+
+    // [ASSERT] - last cleanup should have triggered again
+    expect(mockCleanup0).toBeCalledTimes(1);
+    expect(mockCleanup1).toBeCalledTimes(2);
+  });
+
+  test('Does not call cleanup on unmount change when the option is true', () => {
+    const mockCleanup0 = jest.fn();
+
+    // [ACTION] - Initial render
+    const { result, rerender, unmount } = renderHook(
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      () =>
+        useCleanupCallback(
+          () => {
+            return mockCleanup0;
+          },
+          [],
+          { cleanUpOnUnmount: true }
+        )
+    );
+
+    // [ACTION] - call the user's callback
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - should not have called first cleanup
+    expect(mockCleanup0).toBeCalledTimes(0);
+
+    // [ACTION] - call the user's callback
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - first cleanup should have triggered
+    expect(mockCleanup0).toBeCalledTimes(1);
+
+    // [ACTION] - call the user's callback again
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - cleanup should have triggered
+    expect(mockCleanup0).toBeCalledTimes(2);
+
+    // [ACTION] - re-render hook
+    rerender();
+
+    // [ASSERT] - cleanup should be not have triggered again
+    expect(mockCleanup0).toBeCalledTimes(2);
+
+    // [ACTION] - unmount hook
+    unmount();
+
+    // [ASSERT] - cleanup should have triggered again (option true)
+    expect(mockCleanup0).toBeCalledTimes(3);
+  });
+
+  test('Does not call cleanup on unmount change when the option is false', () => {
+    const mockCleanup0 = jest.fn();
+
+    // [ACTION] - Initial render
+    const { result, rerender, unmount } = renderHook(
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      () =>
+        useCleanupCallback(
+          () => {
+            return mockCleanup0;
+          },
+          [],
+          { cleanUpOnUnmount: false }
+        )
+    );
+
+    // [ACTION] - call the user's callback
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - should not have called cleanup
+    expect(mockCleanup0).toBeCalledTimes(0);
+
+    // [ACTION] - call the user's callback
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - cleanup should have triggered
+    expect(mockCleanup0).toBeCalledTimes(1);
+
+    // [ACTION] - call the user's callback again
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - cleanup should have triggered
+    expect(mockCleanup0).toBeCalledTimes(2);
+
+    // [ACTION] - re-render hook
+    rerender();
+
+    // [ASSERT] - cleanup should be not have triggered again
+    expect(mockCleanup0).toBeCalledTimes(2);
+
+    // [ACTION] - unmount hook
+    unmount();
+
+    // [ASSERT] - cleanup should not have triggered again (option false)
+    expect(mockCleanup0).toBeCalledTimes(2);
+  });
+
+  test('Does not call cleanup on calle when the option is false', () => {
+    const mockCleanup0 = jest.fn();
+
+    // [ACTION] - Initial render
+    const { result, rerender, unmount } = renderHook(
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      () =>
+        useCleanupCallback(
+          () => {
+            return mockCleanup0;
+          },
+          [],
+          { cleanUpOnCall: false }
+        )
+    );
+
+    // [ACTION] - call the user's callback
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - should not have called cleanup
+    expect(mockCleanup0).toBeCalledTimes(0);
+
+    // [ACTION] - call the user's callback
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - should not have called cleanup (option false)
+    expect(mockCleanup0).toBeCalledTimes(0);
+
+    // [ACTION] - call the user's callback again
+    act(() => {
+      result.current();
+    });
+
+    // [ASSERT] - should not have called cleanup (option false)
+    expect(mockCleanup0).toBeCalledTimes(0);
+
+    // [ACTION] - re-render hook
+    rerender();
+
+    // [ASSERT] - should not have called cleanup (option false)
+    expect(mockCleanup0).toBeCalledTimes(0);
+
+    // [ACTION] - unmount hook
+    unmount();
+
+    // [ASSERT] - cleanup should have triggered
+    expect(mockCleanup0).toBeCalledTimes(1);
   });
 });
